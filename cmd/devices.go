@@ -25,4 +25,5 @@ var devicesCmd = &cobra.Command{
 
 func init() {
 	devicesCmd.AddCommand(devicesListCmd)
+	devicesCmd.AddCommand(deviceGetCmd)
 }

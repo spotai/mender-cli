@@ -50,20 +50,23 @@ type deviceData struct {
 }
 
 const (
-	devicesListURL = "/api/management/v2/devauth/devices"
+	devicesListURL     = "/api/management/v2/devauth/devices"
+	deviceInventoryURL = "/api/management/v1/inventory"
 )
 
 type Client struct {
-	url            string
-	devicesListURL string
-	client         *http.Client
+	url                string
+	devicesListURL     string
+	deviceInventoryURL string
+	client             *http.Client
 }
 
 func NewClient(url string, skipVerify bool) *Client {
 	return &Client{
-		url:            url,
-		devicesListURL: client.JoinURL(url, devicesListURL),
-		client:         client.NewHttpClient(skipVerify),
+		url:                url,
+		devicesListURL:     client.JoinURL(url, devicesListURL),
+		deviceInventoryURL: client.JoinURL(url, deviceInventoryURL),
+		client:             client.NewHttpClient(skipVerify),
 	}
 }
 
