@@ -40,11 +40,11 @@ const (
 	httpErrorBoundary = 300
 )
 
-type artifactsList struct {
-	artifacts []artifactData
+type ArtifactsList struct {
+	Artifacts []ArtifactData
 }
 
-type artifactData struct {
+type ArtifactData struct {
 	ID                    string   `json:"id"`
 	Description           string   `json:"description"`
 	Name                  string   `json:"name"`
@@ -66,10 +66,8 @@ type artifactData struct {
 		} `json:"files"`
 		MetaData []interface{} `json:"meta_data"`
 	} `json:"updates"`
-	ArtifactProvides struct {
-		ArtifactName string `json:"artifact_name"`
-	} `json:"artifact_provides"`
-	ArtifactDepends struct {
+	ArtifactProvides map[string]string `json:"artifact_provides"`
+	ArtifactDepends  struct {
 		DeviceType []string `json:"device_type"`
 	} `json:"artifact_depends"`
 	Size     int       `json:"size"`
@@ -140,29 +138,34 @@ func (c *Client) DirectDownloadLink(token string) (*UploadLink, error) {
 	return &link, nil
 }
 
-func (c *Client) ListArtifacts(token string, detailLevel int) error {
+func (c *Client) ListArtifacts(token string) (*ArtifactsList, error) {
+	body, err := client.DoGetRequest(token, c.artifactsListURL, c.client)
+	if err != nil {
+		return nil, err
+	}
+	var list ArtifactsList
+	err = json.Unmarshal(body, &list.Artifacts)
+	if err != nil {
+		return nil, err
+	}
+	return &list, nil
+}
+
+func (c *Client) PrintArtifacts(token string, detailLevel int) error {
 	if detailLevel > 3 || detailLevel < 0 {
 		return fmt.Errorf("FAILURE: invalid artifact detail")
 	}
-
-	body, err := client.DoGetRequest(token, c.artifactsListURL, c.client)
+	list, err := c.ListArtifacts(token)
 	if err != nil {
 		return err
 	}
-
-	var list artifactsList
-	err = json.Unmarshal(body, &list.artifacts)
-	if err != nil {
-		return err
-	}
-	for _, v := range list.artifacts {
+	for _, v := range list.Artifacts {
 		listArtifact(v, detailLevel)
 	}
-
 	return nil
 }
 
-func listArtifact(a artifactData, detailLevel int) {
+func listArtifact(a ArtifactData, detailLevel int) {
 	fmt.Printf("ID: %s\n", a.ID)
 	fmt.Printf("Name: %s\n", a.Name)
 	if detailLevel >= 1 {
@@ -178,7 +181,7 @@ func listArtifact(a artifactData, detailLevel int) {
 		fmt.Printf("Format version: %d\n", a.Info.Version)
 	}
 	if detailLevel >= 2 {
-		fmt.Printf("Artifact provides: %s\n", a.ArtifactProvides.ArtifactName)
+		fmt.Printf("Artifact provides: %v\n", a.ArtifactProvides)
 		fmt.Println("Artifact depends:")
 		for _, v := range a.ArtifactDepends.DeviceType {
 			fmt.Printf("  %s\n", v)

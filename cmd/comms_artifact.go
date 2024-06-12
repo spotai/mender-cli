@@ -15,6 +15,8 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
+	"github.com/mendersoftware/mender-cli/comms"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -22,32 +24,29 @@ import (
 	"github.com/mendersoftware/mender-cli/client/deployments"
 )
 
-const (
-	argDetailLevel = "detail"
-)
+const ()
 
-var artifactsListCmd = &cobra.Command{
-	Use:   "list",
-	Short: "Get a list of artifacts from the Mender server.",
+var commsArtifactCmd = &cobra.Command{
+	Use:   "artifact",
+	Short: "Show the artifact with the latest comms version",
 	Run: func(c *cobra.Command, args []string) {
-		cmd, err := NewArtifactsListCmd(c, args)
+		cmd, err := NewCommsArtifactCmd(c, args)
 		CheckErr(err)
 		CheckErr(cmd.Run())
 	},
 }
 
 func init() {
-	artifactsListCmd.Flags().IntP(argDetailLevel, "d", 0, "artifacts list detail level [0..3]")
+	// commsArtifactCmd.Flags().IntP(argDetailLevel, "d", 0, "artifacts list detail level [0..3]")
 }
 
-type ArtifactsListCmd struct {
-	server      string
-	skipVerify  bool
-	token       string
-	detailLevel int
+type CommsArtifactCmd struct {
+	server     string
+	skipVerify bool
+	token      string
 }
 
-func NewArtifactsListCmd(cmd *cobra.Command, args []string) (*ArtifactsListCmd, error) {
+func NewCommsArtifactCmd(cmd *cobra.Command, args []string) (*CommsArtifactCmd, error) {
 	server := viper.GetString(argRootServer)
 	if server == "" {
 		return nil, errors.New("No server")
@@ -58,26 +57,29 @@ func NewArtifactsListCmd(cmd *cobra.Command, args []string) (*ArtifactsListCmd, 
 		return nil, err
 	}
 
-	detailLevel, err := cmd.Flags().GetInt(argDetailLevel)
-	if err != nil {
-		return nil, err
-	}
-
 	token, err := getAuthToken(cmd)
 	if err != nil {
 		return nil, err
 	}
 
-	return &ArtifactsListCmd{
-		server:      server,
-		token:       token,
-		skipVerify:  skipVerify,
-		detailLevel: detailLevel,
+	return &CommsArtifactCmd{
+		server:     server,
+		token:      token,
+		skipVerify: skipVerify,
 	}, nil
 }
 
-func (c *ArtifactsListCmd) Run() error {
+func (c *CommsArtifactCmd) Run() error {
 
 	client := deployments.NewClient(c.server, c.skipVerify)
-	return client.PrintArtifacts(c.token, c.detailLevel)
+	list, err := client.ListArtifacts(c.token)
+	if err != nil {
+		return err
+	}
+	latest, err := comms.LatestArtifact(list)
+	if err != nil {
+		return err
+	}
+	fmt.Println("latest comms artifact is:", latest)
+	return nil
 }

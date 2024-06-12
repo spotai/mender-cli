@@ -139,5 +139,6 @@ func init() {
 	rootCmd.AddCommand(portForwardCmd)
 	rootCmd.AddCommand(fileTransferCmd)
 	rootCmd.AddCommand(deploymentsCmd)
+	rootCmd.AddCommand(commsCmd)
 	validateConfiguration()
 }
