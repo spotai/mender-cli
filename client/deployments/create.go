@@ -64,7 +64,7 @@ func (c *Client) Create(
 			return "", errors.New("Unauthorized. Please Login first")
 		} else if rsp.StatusCode == http.StatusConflict {
 			log.Verbf("deployment creation sent to '%s' failed with status %d", req.Host, rsp.StatusCode)
-			return "", errors.New("deployment with same name exists already")
+			return "", errors.New("unfinished deployment with same name and targeting same device already exists")
 		}
 		return "", errors.New(
 			fmt.Sprintf("deployment creation sent to '%s' failed with status %d", req.Host, rsp.StatusCode),

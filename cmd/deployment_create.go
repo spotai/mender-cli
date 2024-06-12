@@ -6,6 +6,7 @@ import (
 	"github.com/mendersoftware/mender-cli/client/deployments"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"time"
 )
 
 var deploymentCreateCmd = &cobra.Command{
@@ -22,12 +23,19 @@ const (
 	argDeploymentName = "name"
 	argArtifactName   = "artifact"
 	argDeviceId       = "device"
+	argWaitMinutes    = "wait"
 )
+
+var waitMinutes *int
 
 func init() {
 	deploymentCreateCmd.Flags().StringP(argDeploymentName, "n", "", "deployment name")
 	deploymentCreateCmd.Flags().StringP(argArtifactName, "a", "", "artifact name")
 	deploymentCreateCmd.Flags().StringP(argDeviceId, "d", "", "device id")
+	waitMinutes = deploymentCreateCmd.Flags().IntP(argWaitMinutes, "w", 32, "minutes to wait for deployment to finish (0 = don't wait)")
+	CheckErr(deploymentCreateCmd.MarkFlagRequired(argDeploymentName))
+	CheckErr(deploymentCreateCmd.MarkFlagRequired(argArtifactName))
+	CheckErr(deploymentCreateCmd.MarkFlagRequired(argDeviceId))
 }
 
 type DeploymentCreateCmd struct {
@@ -86,5 +94,21 @@ func (c *DeploymentCreateCmd) Run() error {
 		return err
 	}
 	fmt.Println("deployment id:", deploymentId)
-	return nil
+	if *waitMinutes > 0 {
+		for i := 0; i < *waitMinutes; i++ {
+			dep, err := client.Get(c.token, deploymentId)
+			if err != nil {
+				return fmt.Errorf("failed to get deployment: %s", err)
+			}
+			if dep.Status == "finished" {
+				fmt.Println("deployment finished")
+				return nil
+			}
+			fmt.Println("deployment status is still", dep.Status, "... checking again in one minute")
+			time.Sleep(time.Minute)
+		}
+		return fmt.Errorf("deployment still unfinished after %d minutes", *waitMinutes)
+	} else {
+		return nil
+	}
 }
