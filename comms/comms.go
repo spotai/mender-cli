@@ -10,15 +10,15 @@ import (
 )
 
 const (
-	versionKey = "data_partition.comms.version"
+	VersionKey = "data_partition.comms.version"
 )
 
-// LatestArtifact returns the name of the artifact with the most recent comms version
-func LatestArtifact(list *deployments.ArtifactsList) (string, error) {
+// LatestArtifactNameAndVersion returns the name of the artifact with the most recent comms version
+func LatestArtifactNameAndVersion(list *deployments.ArtifactsList) (string, string, error) {
 	// Make a list of pointers to avoid copying maps during sorting
 	var arts []*deployments.ArtifactData
 	for i, art := range list.Artifacts {
-		prov, ok := art.ArtifactProvides[versionKey]
+		prov, ok := art.ArtifactProvides[VersionKey]
 		if ok {
 			prov = ensureSemverPrefix(prov)
 			if !semver.IsValid(prov) {
@@ -29,14 +29,14 @@ func LatestArtifact(list *deployments.ArtifactsList) (string, error) {
 		}
 	}
 	if len(arts) == 0 {
-		return "", fmt.Errorf("no comms artifacts found")
+		return "", "", fmt.Errorf("no comms artifacts found")
 	}
 	sort.Slice(arts, func(i, j int) bool {
-		v1 := ensureSemverPrefix(arts[i].ArtifactProvides[versionKey])
-		v2 := ensureSemverPrefix(arts[j].ArtifactProvides[versionKey])
+		v1 := ensureSemverPrefix(arts[i].ArtifactProvides[VersionKey])
+		v2 := ensureSemverPrefix(arts[j].ArtifactProvides[VersionKey])
 		return semver.Compare(v1, v2) > 0
 	})
-	return arts[0].Name, nil
+	return arts[0].Name, arts[0].ArtifactProvides[VersionKey], nil
 }
 
 // Ensures that a version string is prefixed with a 'v'

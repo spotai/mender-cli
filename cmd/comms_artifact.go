@@ -76,7 +76,7 @@ func (c *CommsArtifactCmd) Run() error {
 	if err != nil {
 		return err
 	}
-	latest, err := comms.LatestArtifact(list)
+	latest, _, err := comms.LatestArtifactNameAndVersion(list)
 	if err != nil {
 		return err
 	}

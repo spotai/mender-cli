@@ -28,4 +28,5 @@ var commsCmd = &cobra.Command{
 
 func init() {
 	commsCmd.AddCommand(commsArtifactCmd)
+	commsCmd.AddCommand(ensureCmd)
 }
