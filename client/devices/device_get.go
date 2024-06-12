@@ -17,22 +17,29 @@ type inventoryData struct {
 	Attributes []attribute
 }
 
-func (c *Client) GetDeviceByHostname(token string, hostname string) error {
+func (c *Client) GetDeviceByHostname(token string, hostname string) (*inventoryData, error) {
 	url := fmt.Sprintf("%s/devices?hostname=%s", c.deviceInventoryURL, hostname)
 	body, err := client.DoGetRequest(token, url, c.client)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var devices []inventoryData
 	err = json.Unmarshal(body, &devices)
 	if err != nil {
-		return fmt.Errorf("failed to unmarshal body: %s", err)
+		return nil, fmt.Errorf("failed to unmarshal body: %s", err)
 	}
 	if len(devices) == 0 {
-		return fmt.Errorf("no device found")
+		return nil, fmt.Errorf("no device found")
 	}
-	device := devices[0]
+	return &devices[0], nil
+}
+
+func (c *Client) PrintDeviceByHostname(token string, hostname string) error {
+	device, err := c.GetDeviceByHostname(token, hostname)
+	if err != nil {
+		return err
+	}
 	fmt.Println("id:", device.Id)
 	for _, attr := range device.Attributes {
 		fmt.Printf("%s (%s): %v\n", attr.Name, attr.Scope, attr.Value)

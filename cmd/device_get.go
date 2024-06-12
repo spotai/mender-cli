@@ -58,5 +58,5 @@ func NewDeviceGetCmd(cmd *cobra.Command, args []string) (*DeviceGetCmd, error) {
 func (c *DeviceGetCmd) Run() error {
 
 	client := devices.NewClient(c.server, c.skipVerify)
-	return client.GetDeviceByHostname(c.token, c.hostname)
+	return client.PrintDeviceByHostname(c.token, c.hostname)
 }
