@@ -84,6 +84,7 @@ const (
 	transferCompleteURL = "/api/management/v1/deployments/artifacts/directupload/:id/complete"
 	artifactURL         = "/api/management/v1/deployments/artifacts/:id"
 	artifactDownloadURL = "/api/management/v1/deployments/artifacts/:id/download"
+	deploymentsURL      = "/api/management/v1/deployments/deployments"
 )
 
 type Client struct {
@@ -94,6 +95,7 @@ type Client struct {
 	artifactsListURL    string
 	artifactDeleteURL   string
 	directUploadURL     string
+	deploymentsURL      string
 	client              *http.Client
 }
 
@@ -117,6 +119,7 @@ func NewClient(url string, skipVerify bool) *Client {
 		artifactsListURL:    client.JoinURL(url, artifactsListURL),
 		artifactDeleteURL:   client.JoinURL(url, artifactsDeleteURL),
 		directUploadURL:     client.JoinURL(url, directUploadURL),
+		deploymentsURL:      client.JoinURL(url, deploymentsURL),
 		client:              client.NewHttpClient(skipVerify),
 	}
 }
